@@ -1,73 +1,95 @@
+"""
+Script de conexão e operações CRUD com MySQL
+Realiza inserções, atualizações, exclusões e consultas na tabela 'aula'
+"""
+
+# Importação de bibliotecas
 import mysql.connector
 from mysql.connector import Error
-try:
-    # Tenta estabelecer uma conexão com o banco de dados MySQL
-    connection = mysql.connector.connect(
-        host='127.0.0.1',        # Nome do host (localhost = máquina local)
-        database='materia',      # Nome do banco de dados
-        user='root',             # Usuário do banco de dados
-        password=''              # Senha (em branco nesse caso)
-    )
-    while True:
-        id = int(input(f"Insira o ID: "))
-        nome = input(f"Insira a matéria: ")
 
+try:
+    # ==================== CONEXÃO COM O BANCO ====================
+    # Configuração e estabelecimento da conexão
+    connection = mysql.connector.connect(
+        host='127.0.0.1',        # Endereço do servidor MySQL (localhost)
+        database='materia',      # Nome do banco de dados a ser acessado
+        user='root',             # Usuário para autenticação
+        password=''              # Senha do usuário (vazia neste caso)
+    )
+
+    # ==================== OPERAÇÃO DE INSERÇÃO ====================
+    while True:
+        # Entrada de dados do usuário
+        id = int(input("Insira o ID: "))
+        nome = input("Insira a matéria: ")
+
+        # Construção e execução da query SQL
         mySql_insert_query = f"""
             INSERT INTO aula (idaula, nome)
             VALUES ({id}, '{nome}')
         """
         cursor = connection.cursor()
-        cursor.execute(mySql_insert_query)  # Executa o comando SQL
-        connection.commit()                 # Confirma as mudanças no banco de dados
+        cursor.execute(mySql_insert_query)  # Executa o comando INSERT
+        connection.commit()                 # Confirma a transação
 
-        # Mostra o número de registros inseridos
+        # Feedback ao usuário
         print(cursor.rowcount, "Inserido com sucesso")
-        opc = input("deseja continuar? s n ")
-        if opc in 'n':
+        
+        # Controle de continuidade
+        opc = input("Deseja continuar? s n ")
+        if opc.lower() == 'n':
             break
 
+    # ==================== OPERAÇÃO DE ATUALIZAÇÃO ====================
     while True:
-        opc = input("deseja atualizar? s n ")
-        if opc in 'n':
+        opc = input("Deseja atualizar? s n ")
+        if opc.lower() == 'n':
             break
+            
+        # Dados para atualização
         UpdateID = int(input("Qual ID terá nome atualizado? "))
-        UpdateNome = input("Qual o novo nome para a matéria?  ")
+        UpdateNome = input("Qual o novo nome para a matéria? ")
+        
+        # Query de atualização
         sql_Update_query = f"""UPDATE aula SET nome = '{UpdateNome}' WHERE idaula = {UpdateID}"""
         cursor.execute(sql_Update_query)
         connection.commit()
         print(cursor.rowcount, "record(s) affected")
 
+    # ==================== OPERAÇÃO DE EXCLUSÃO ====================
     while True:
-        opc = input("deseja deletar? s n ")
-        if opc in 'n':
+        opc = input("Deseja deletar? s n ")
+        if opc.lower() == 'n':
             break
-        DelId = int(input(f"Insira o ID para deletar: "))
-        sql_Delete_query = f"""Delete from aula where idaula = {DelId}"""
+            
+        # ID para exclusão
+        DelId = int(input("Insira o ID para deletar: "))
+        
+        # Query de exclusão
+        sql_Delete_query = f"""DELETE FROM aula WHERE idaula = {DelId}"""
         cursor.execute(sql_Delete_query)
         connection.commit()
-        print('number of rows deleted', cursor.rowcount)
+        print('Número de linhas deletadas:', cursor.rowcount)
 
-    mySql_select_query = f"""
-            SELECT * FROM aula
-        """
+    # ==================== CONSULTA DE DADOS ====================
+    # Query para selecionar todos os registros
+    mySql_select_query = """SELECT * FROM aula"""
     cursor = connection.cursor()
     cursor.execute(mySql_select_query)
+    records = cursor.fetchall()  # Obtém todos os registros
 
-    # get all records
-    records = cursor.fetchall()
-
-    print("Total de registros: ", cursor.rowcount)
-    print("\nPrinting cada linha")
-
+    # Exibição dos resultados
+    print("\nTotal de registros:", cursor.rowcount)
+    print("Conteúdo da tabela:")
     for row in records:
-        print("idaula = ", row[0], )
-        print("nome = ", row[1], "\n")
+        print(f"ID: {row[0]}, Matéria: {row[1]}")
 
 except Error as e:
-    # Caso ocorra um erro na conexão ou execução do SQL
-    print("Erro no MySQL", e)
+    # Tratamento de erros
+    print("Erro na conexão ou operação com MySQL:", e)
+    
 finally:
-    # Garante que a conexão será encerrada corretamente
+    # ==================== ENCERRAMENTO DA CONEXÃO ====================
     if connection.is_connected():
-        connection.close()
-        print("MySQL conexão fechada")
+        connection.close()  # Fecha a conexão com o banco
+        print("Conexão com MySQL encerrada")
